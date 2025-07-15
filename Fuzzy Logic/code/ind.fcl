@@ -1,0 +1,57 @@
+FUNCTION_BLOCK IndustrialController
+
+VAR_INPUT
+    dimensions : REAL;
+    tolerance : REAL; 
+    surface : REAL;
+END_VAR
+
+VAR_OUTPUT
+    quality : REAL;
+    result : REAL;
+END_VAR
+
+FUZZIFY dimensions
+    TERM small := trian 0 5 12;
+    TERM medium := trian 8 15 22;
+    TERM large := trian 18 25 30;
+END_FUZZIFY
+
+FUZZIFY tolerance
+    TERM low := trape 0 0.1 0.4 0.6;
+    TERM medium := trape 0.3 0.4 1.6 1.8;
+    TERM high := trape 1.4 1.6 3.2 3.5;
+END_FUZZIFY
+
+FUZZIFY surface
+    TERM rough := gauss 1.6 0.1; 
+    TERM smooth := gauss 0.4 0.1;
+END_FUZZIFY
+
+DEFUZZIFY quality
+    TERM low := trape 0 10 30 40;
+    TERM medium := trape 40 50 70 80;
+    TERM high := trape 80 90 100 100;
+    METHOD : LM;
+    DEFAULT := 10;
+END_DEFUZZIFY
+
+DEFUZZIFY result
+    TERM discarded := trape 0 0 0.9 0.9;
+    TERM production := trape 0.9 0.9 1 1;
+    METHOD : LM;
+END_DEFUZZIFY
+
+RULEBLOCK rules
+    ACT : MIN;
+    ACCU : MAX;
+
+
+    RULE 1 : IF surface IS rough OR dimensions IS large OR tolerance IS high THEN quality IS low, result IS discarded;
+    RULE 2 : IF surface IS smooth AND tolerance IS low AND dimensions IS small THEN quality IS high, result IS production;
+    RULE 3 : IF surface IS smooth AND tolerance IS low AND dimensions IS medium THEN quality IS high, result IS production;
+    RULE 4 : IF surface IS smooth AND tolerance IS medium AND dimensions IS medium THEN quality IS medium, result IS production;
+    RULE 5 : IF surface IS smooth AND tolerance IS medium AND dimensions IS small THEN quality IS medium, result IS production;
+END_RULEBLOCK
+
+END_FUNCTION_BLOCK
